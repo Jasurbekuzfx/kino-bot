@@ -3,10 +3,8 @@ import sqlite3
 def create_db():
     conn = sqlite3.connect('kino_bot.db')
     cursor = conn.cursor()
-    # Kinolar jadvali
     cursor.execute('''CREATE TABLE IF NOT EXISTS movies 
                       (id INTEGER PRIMARY KEY AUTOINCREMENT, code TEXT UNIQUE, title TEXT, file_id TEXT)''')
-    # Foydalanuvchilar jadvali (Statistika uchun)
     cursor.execute('''CREATE TABLE IF NOT EXISTS users (user_id INTEGER PRIMARY KEY)''')
     conn.commit()
     conn.close()
@@ -35,13 +33,5 @@ def get_movie(code):
     cursor = conn.cursor()
     cursor.execute("SELECT title, file_id FROM movies WHERE code=?", (code,))
     res = cursor.fetchone()
-    conn.close()
-    return res
-
-def count_users():
-    conn = sqlite3.connect('kino_bot.db')
-    cursor = conn.cursor()
-    cursor.execute("SELECT COUNT(*) FROM users")
-    res = cursor.fetchone()[0]
     conn.close()
     return res
