@@ -5,7 +5,7 @@ TOKEN = os.getenv("BOT_TOKEN", "8519404160:AAHDHkIltINWKtLRnjYHH9mYGM5hh-Z7214")
 ADMINS = [8225823974]
 
 # Siz bergan kanal ID raqami
-CHANNELS = ["-1003967862553"] 
+CHANNELS = ["-1003967862553", "-1003958419654"] 
 
 # Yangi almashtirilgan taklif havola
 INVITE_LINK = "https://t.me/+9_Pfk26VshtlNTJi"
