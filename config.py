@@ -2,10 +2,10 @@ import os
 
 # Render'dagi Environment Variables'dan o'qiydi
 TOKEN = os.getenv("BOT_TOKEN", "8519404160:AAHDHkIltINWKtLRnjYHH9mYGM5hh-Z7214")
-ADMINS = [8225823974]
+ADMINS = [8225823974] # Yangi Admin ID
 
-# Siz bergan kanal ID raqami
-CHANNELS = ["-1003967862553"] 
-CHANNELS = ["-1003958419654"] 
-# Yangi almashtirilgan taklif havola
+# Kanallarni bitta ro'yxatga jamlaymiz
+CHANNELS = ["-1003967862553", "-1003958419654"]
+
+# Taklif havolasi (birinchi yoki asosiy kanal uchun)
 INVITE_LINK = "https://t.me/+9_Pfk26VshtlNTJi"
