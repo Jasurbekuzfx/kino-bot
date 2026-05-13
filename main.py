@@ -48,17 +48,28 @@ async def check_callback(call: types.CallbackQuery):
 
 @dp.message_handler(content_types=['video'])
 async def save_movie(message: types.Message):
-    if message.from_user.id in ADMINS and message.caption and message.caption.startswith("kino:"):
-        try:
-            parts = message.caption.split(":")
-            code = parts[1]
-            title = parts[2]
-            if db.add_movie(code, title, message.video.file_id):
-                await message.reply(f"✅ Saqlandi!\nKod: {code}\nNomi: {title}")
-            else:
-                await message.reply("❌ Xato: Bu kod bazada bor.")
-        except:
-            await message.reply("⚠️ Format xato! Namuna: kino:123:Forsaj")
+    # Admin ekanligingizni tekshirish uchun log chiqaradi
+    logging.info(f"Video keldi. User ID: {message.from_user.id}")
+    
+    if message.from_user.id not in ADMINS:
+        logging.warning("Bu foydalanuvchi admin emas!")
+        return
+
+    if message.caption:
+        caption = message.caption.lower()
+        if "kino:" in caption:
+            try:
+                parts = message.caption.split(":")
+                code = parts[1].strip()
+                title = parts[2].strip()
+                
+                if db.add_movie(code, title, message.video.file_id):
+                    await message.reply(f"✅ Saqlandi!\nKod: {code}\nNomi: {title}")
+                else:
+                    await message.reply("❌ Bu kod bazada band.")
+            except Exception as e:
+                logging.error(f"Xatolik: {e}")
+                await message.reply("⚠️ Format xato! Namuna: kino:100:Forsaj")
 
 @dp.message_handler(lambda message: message.text.isdigit())
 async def search_movie(message: types.Message):
