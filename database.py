@@ -1,37 +1,21 @@
 import sqlite3
 
-def create_db():
-    conn = sqlite3.connect('kino_bot.db')
-    cursor = conn.cursor()
-    cursor.execute('''CREATE TABLE IF NOT EXISTS movies 
-                      (id INTEGER PRIMARY KEY AUTOINCREMENT, code TEXT UNIQUE, title TEXT, file_id TEXT)''')
-    cursor.execute('''CREATE TABLE IF NOT EXISTS users (user_id INTEGER PRIMARY KEY)''')
-    conn.commit()
-    conn.close()
+class Database:
+    def __init__(self, db_file):
+        self.connection = sqlite3.connect(db_file)
+        self.cursor = self.connection.cursor()
+        self.create_table()
 
-def add_user(user_id):
-    conn = sqlite3.connect('kino_bot.db')
-    cursor = conn.cursor()
-    cursor.execute("INSERT OR IGNORE INTO users (user_id) VALUES (?)", (user_id,))
-    conn.commit()
-    conn.close()
+    def create_table(self):
+        with self.connection:
+            self.cursor.execute("""
+                CREATE TABLE IF NOT EXISTS users (
+                    user_id INTEGER PRIMARY KEY
+                )
+            """)
 
-def add_movie(code, title, file_id):
-    conn = sqlite3.connect('kino_bot.db')
-    cursor = conn.cursor()
-    try:
-        cursor.execute("INSERT INTO movies (code, title, file_id) VALUES (?, ?, ?)", (code, title, file_id))
-        conn.commit()
-        return True
-    except:
-        return False
-    finally:
-        conn.close()
+    def add_user(self, user_id):
+        with self.connection:
+            self.cursor.execute("INSERT OR IGNORE INTO users (user_id) VALUES (?)", (user_id,))
 
-def get_movie(code):
-    conn = sqlite3.connect('kino_bot.db')
-    cursor = conn.cursor()
-    cursor.execute("SELECT title, file_id FROM movies WHERE code=?", (code,))
-    res = cursor.fetchone()
-    conn.close()
-    return res
+    # Bu yerga kinolarni qidirish funksiyalarini qo'shishingiz mumkin
