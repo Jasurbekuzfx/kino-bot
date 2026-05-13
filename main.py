@@ -1,11 +1,23 @@
 import logging
+import os
 from aiogram import Bot, Dispatcher, executor, types
 from config import TOKEN, ADMINS, CHANNELS, INVITE_LINK
 import database as db
+from aiohttp import web
 
+# Logging sozlash
 logging.basicConfig(level=logging.INFO)
+
+# Botni ishga tushirish
 bot = Bot(token=TOKEN)
 dp = Dispatcher(bot)
+
+# Render uchun oddiy Web Server (Health Check uchun)
+async def handle(request):
+    return web.Response(text="Bot is running!")
+
+app = web.Application()
+app.router.add_get("/", handle)
 
 async def check_sub(user_id):
     for channel in CHANNELS:
@@ -13,7 +25,7 @@ async def check_sub(user_id):
             member = await bot.get_chat_member(chat_id=channel, user_id=user_id)
             if member.status in ["left", "kicked"]:
                 return False
-        except:
+        except Exception:
             return False
     return True
 
@@ -38,12 +50,18 @@ async def check_callback(call: types.CallbackQuery):
 
 @dp.message_handler(content_types=['video'])
 async def save_movie(message: types.Message):
+    # Admin tekshiruvi va caption formati: kino:kod:nomi
     if message.from_user.id in ADMINS and message.caption and message.caption.startswith("kino:"):
-        _, code, title = message.caption.split(":")
-        if db.add_movie(code, title, message.video.file_id):
-            await message.reply(f"✅ Saqlandi! Kod: {code}")
-        else:
-            await message.reply("❌ Bu kod band.")
+        try:
+            parts = message.caption.split(":")
+            code = parts[1]
+            title = parts[2]
+            if db.add_movie(code, title, message.video.file_id):
+                await message.reply(f"✅ Saqlandi! Kod: {code}")
+            else:
+                await message.reply("❌ Bu kod bazada mavjud.")
+        except IndexError:
+            await message.reply("⚠️ Format xato! Namuna: kino:123:Forsaj")
 
 @dp.message_handler(lambda message: message.text.isdigit())
 async def search_movie(message: types.Message):
@@ -52,10 +70,18 @@ async def search_movie(message: types.Message):
     
     res = db.get_movie(message.text)
     if res:
+        # res[0] - title, res[1] - file_id
         await bot.send_video(message.chat.id, res[1], caption=f"🎬 {res[0]}")
     else:
-        await message.answer("😔 Kino topilmadi.")
+        await message.answer("😔 Bu kod bilan kino topilmadi.")
+
+async def on_startup(x):
+    db.create_db()
+    # Render portini ochish
+    runner = web.AppRunner(app)
+    await runner.setup()
+    site = web.TCPSite(runner, '0.0.0.0', int(os.getenv("PORT", 10000)))
+    await site.start()
 
 if __name__ == '__main__':
-    db.create_db()
-    executor.start_polling(dp, skip_updates=True)
+    executor.start_polling(dp, skip_updates=True, on_startup=on_startup)
