@@ -5,14 +5,12 @@ from config import TOKEN, ADMINS, CHANNELS, INVITE_LINK
 import database as db
 from aiohttp import web
 
-# Logging sozlash
 logging.basicConfig(level=logging.INFO)
 
-# Botni ishga tushirish
 bot = Bot(token=TOKEN)
 dp = Dispatcher(bot)
 
-# Render uchun oddiy Web Server (Health Check uchun)
+# Render serveri uchun Health Check
 async def handle(request):
     return web.Response(text="Bot is running!")
 
@@ -46,21 +44,20 @@ async def check_callback(call: types.CallbackQuery):
         await call.message.delete()
         await call.message.answer("✅ Rahmat! Kino kodini yuboring:")
     else:
-        await call.answer("❌ Hali a'zo bo'lmadingiz!", show_alert=True)
+        await call.answer("❌ Siz hali kanalga a'zo emassiz!", show_alert=True)
 
 @dp.message_handler(content_types=['video'])
 async def save_movie(message: types.Message):
-    # Admin tekshiruvi va caption formati: kino:kod:nomi
     if message.from_user.id in ADMINS and message.caption and message.caption.startswith("kino:"):
         try:
             parts = message.caption.split(":")
             code = parts[1]
             title = parts[2]
             if db.add_movie(code, title, message.video.file_id):
-                await message.reply(f"✅ Saqlandi! Kod: {code}")
+                await message.reply(f"✅ Saqlandi!\nKod: {code}\nNomi: {title}")
             else:
-                await message.reply("❌ Bu kod bazada mavjud.")
-        except IndexError:
+                await message.reply("❌ Xato: Bu kod bazada bor.")
+        except:
             await message.reply("⚠️ Format xato! Namuna: kino:123:Forsaj")
 
 @dp.message_handler(lambda message: message.text.isdigit())
@@ -70,14 +67,12 @@ async def search_movie(message: types.Message):
     
     res = db.get_movie(message.text)
     if res:
-        # res[0] - title, res[1] - file_id
         await bot.send_video(message.chat.id, res[1], caption=f"🎬 {res[0]}")
     else:
         await message.answer("😔 Bu kod bilan kino topilmadi.")
 
 async def on_startup(x):
     db.create_db()
-    # Render portini ochish
     runner = web.AppRunner(app)
     await runner.setup()
     site = web.TCPSite(runner, '0.0.0.0', int(os.getenv("PORT", 10000)))
