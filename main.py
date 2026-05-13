@@ -18,12 +18,13 @@ app = web.Application()
 app.router.add_get("/", handle)
 
 async def check_sub(user_id):
-    for channel in CHANNELS:
+    # CHANNELS endi lug'at, shuning uchun .keys() ishlatamiz
+    for channel_id in CHANNELS.keys():
         try:
-            member = await bot.get_chat_member(chat_id=channel, user_id=user_id)
+            member = await bot.get_chat_member(chat_id=channel_id, user_id=user_id)
             if member.status in ["left", "kicked"]:
                 return False
-        except Exception:
+        except:
             return False
     return True
 
